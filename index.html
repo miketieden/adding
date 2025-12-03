@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- CUSTOM CSS FROM BLOCKS GAME --- */
+        :root {
+            /* Main colors used in the application */
+            --color-blue-main: #0f6bb4; /* Ones (Squares) */
+            --color-green-main: #12a553; /* Tens (Stacks) */
+            --color-orange-main: #cc5500; /* Hundreds (Plates) */
+            
+            /* Support colors */
+            --color-blue-light: #e6f0f7; 
+            --color-dark-blue: #0a4f77; 
+            --color-dark-green: #0a6936; 
+            --color-dark-blue-border: #094777; 
+            --color-dark-orange-border: #a64400; /* Darker orange for border */
+        }
+
+        /* Base Font and Background */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+
+        /* --- Block Sizing and Appearance --- */
+        /* Base unit has been scaled down to 0.6em to fit Plates (Hundreds) */
+        
+        /* Plates (Hundreds) - Orange */
+        .plate-block {
+            width: 6em; /* 10 * 0.6em */
+            height: 6em; /* 10 * 0.6em */
+            background-color: var(--color-orange-main);
+            box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-dark-orange-border);
+            transition: transform 0.1s ease-out, box-shadow 0.2s; 
+            border-radius: 0.2em;
+        }
+
+        /* Stacks (Tens) - Green */
+        .ten-block {
+            width: 0.6em; 
+            height: 6em; /* 10 * 0.6em */
+            background-color: var(--color-green-main); 
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--color-dark-green);
+            transition: transform 0.1s ease-out, box-shadow 0.2s; 
+            border-radius: 0.1em;
+        }
+
+        /* Squares (Ones) - Blue */
+        .one-block {
+            width: 0.6em;
+            height: 0.6em;
+            background-color: var(--color-blue-main); 
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--color-dark-blue-border); 
+            transition: transform 0.1s ease-out, box-shadow 0.2s;
+            border-radius: 0.1em; 
+        }
+
+        /* Responsive Block Wrapper (main container for all block types) */
+        .block-wrapper {
+            display: flex;
+            gap: 1em; /* Increased gap between major block groups (H, T, O) */
+            justify-content: center;
+            align-items: flex-end; /* Align all content to the bottom of the card */
+            min-height: 6em; /* Height of the largest block (Plate) */
+        }
+        
+        /* Container for the Hundreds Blocks (Plates) */
+        .plates-container {
+            display: flex;
+            gap: 0.5em; /* Space between plates */
+            align-items: flex-end;
+            padding-bottom: 0.5em; 
+        }
+
+        /* Container for the Tens Blocks (Stacks) */
+        .stacks-container {
+            display: flex;
+            gap: 0.3em; /* Space between each ten block */
+            align-items: flex-end;
+            padding-bottom: 0.5em; 
+        }
+
+        /* Container for the Ones Blocks (Squares) - FORCED COLUMN WRAP (3x3 Grid) */
+        .squares-container {
+            display: flex;
+            flex-direction: column; 
+            flex-wrap: wrap; 
+            /* Max height set for 3 blocks (0.6em each) + 2 gaps (0.2em each) = 1.8em + 0.4em = 2.2em */
+            max-height: 2.2em; /* Enforces 3 blocks high before wrapping */
+            gap: 0.2em; /* Spacing between individual squares */
+            align-content: flex-start; 
+            margin-left: 1em; 
+            padding-bottom: 0.5em; 
+        }
+
+        .vibrate {
+            animation: vibrate 0.1s infinite alternate;
+        }
+        @keyframes vibrate {
+            0% { transform: translate(1px, 1px); }
+            100% { transform: translate(-1px, -1px); }
+        }
+
+        /* Utility Styles (Colors, Feedback) */
+        .text-main-blue { color: var(--color-blue-main) !important; }
+        .text-main-green { color: var(--color-green-main) !important; }
+        .bg-main-blue { background-color: var(--color-blue-main); }
+        .bg-main-blue:hover { background-color: var(--color-dark-blue); }
+
+        .card-style {
+            background-color: var(--color-blue-light);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .correct-answer {
+            background-color: #d1fae5; 
+            border: 3px solid #10b981; 
+        }
+
+        .incorrect-answer {
+            background-color: #fecaca; 
+            border: 3px solid #dc2626; 
+        }
+        
+    </style>
+    <script type="module">
+        // Global Game State
+        window.gameState = {
+            cardA: { plates: 0, stacks: 0, squares: 0 },
+            cardB: { plates: 0, stacks: 0, squares: 0 },
+            correctAnswer: 0,
+            score: 0,
+        };
+
+        const generateCard = () => {
+            // Plates (Hundreds): 0, 1, or 2 (to allow total up to 299)
+            const plates = Math.floor(Math.random() * 3); 
+            // Stacks (Tens): 0 to 9
+            const stacks = Math.floor(Math.random() * 10); 
+            // Squares (Ones): 0 to 9
+            const squares = Math.floor(Math.random() * 10); 
+            
+            return { plates, stacks, squares };
+        };
+
+        const renderShapes = (containerId, card) => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            // 1. Create containers for Plates, Stacks, and Squares
+            const platesContainer = document.createElement('div');
+            platesContainer.className = 'plates-container';
+            
+            const stacksContainer = document.createElement('div');
+            stacksContainer.className = 'stacks-container';
+            
+            const squaresContainer = document.createElement('div');
+            squaresContainer.className = 'squares-container';
+            
+            // 2. Add Plates (Hundreds) - Orange
+            for (let i = 0; i < card.plates; i++) {
+                const plate = document.createElement('div');
+                plate.className = 'plate-block hover:scale-105'; 
+                platesContainer.appendChild(plate);
+            }
+
+            // 3. Add Stacks (Tens) - Green
+            for (let i = 0; i < card.stacks; i++) {
+                const stack = document.createElement('div');
+                stack.className = 'ten-block hover:scale-105'; 
+                stacksContainer.appendChild(stack);
+            }
+
+            // 4. Add Squares (Ones) - Blue
+            for (let i = 0; i < card.squares; i++) {
+                const square = document.createElement('div');
+                square.className = 'one-block hover:scale-105';
+                squaresContainer.appendChild(square);
+            }
+
+            // 5. Append the containers to the main card container
+            container.appendChild(platesContainer);
+            container.appendChild(stacksContainer);
+            container.appendChild(squaresContainer);
+
+            // Display numerical representation for clarity
+            const numericLabel = document.createElement('div');
+            const numericValue = (card.plates * 100) + (card.stacks * 10) + card.squares;
+            numericLabel.className = 'absolute top-2 right-2 text-md text-gray-500 font-mono hidden md:block';
+            numericLabel.textContent = numericValue;
+            container.appendChild(numericLabel);
+        };
+
+        const renderGame = () => {
+            renderShapes('card-a-shapes', window.gameState.cardA);
+            renderShapes('card-b-shapes', window.gameState.cardB);
+            document.getElementById('current-score-display').textContent = `Score: ${window.gameState.score}`;
+        };
+
+        const startGame = () => {
+            window.gameState.cardA = generateCard();
+            window.gameState.cardB = generateCard();
+
+            // Calculate the total blocks for all place values
+            const totalPlates = window.gameState.cardA.plates + window.gameState.cardB.plates;
+            const totalStacks = window.gameState.cardA.stacks + window.gameState.cardB.stacks;
+            const totalSquares = window.gameState.cardA.squares + window.gameState.cardB.squares;
+
+            // Reroll if the totals exceed the no-regrouping constraints
+            // Total plates must be 2 or less (max number is 299)
+            // Total stacks/squares must be 9 or less
+            if (totalPlates > 2 || totalStacks > 9 || totalSquares > 9) {
+                return startGame();
+            }
+
+            // Calculate the correct answer
+            window.gameState.correctAnswer = (totalPlates * 100) + (totalStacks * 10) + totalSquares;
+            
+            // Ensure the minimum number is 11, otherwise reroll for a meaningful problem
+            if (window.gameState.correctAnswer < 11) {
+                return startGame();
+            }
+
+            document.getElementById('answer-input').value = '';
+            document.getElementById('message-box').innerHTML = 'Add the blocks to find the total!';
+            
+            // Clear feedback classes
+            document.getElementById('card-a-wrapper').classList.remove('correct-answer', 'incorrect-answer');
+            document.getElementById('card-b-wrapper').classList.remove('correct-answer', 'incorrect-answer');
+            
+            renderGame();
+        };
+
+        const checkAnswer = () => {
+            const inputElement = document.getElementById('answer-input');
+            const messageElement = document.getElementById('message-box');
+            
+            // Use Number() to parse text input
+            const userAnswer = Number(inputElement.value.trim()); 
+            
+            const cardAElement = document.getElementById('card-a-wrapper');
+            const cardBElement = document.getElementById('card-b-wrapper');
+
+            // Clear feedback classes first
+            cardAElement.classList.remove('correct-answer', 'incorrect-answer');
+            cardBElement.classList.remove('correct-answer', 'incorrect-answer');
+
+
+            // Check for valid numerical input
+            if (isNaN(userAnswer) || inputElement.value.trim() === '') {
+                messageElement.textContent = 'Please enter a valid number.';
+                inputElement.classList.add('vibrate');
+                setTimeout(() => inputElement.classList.remove('vibrate'), 500);
+                return;
+            }
+
+            if (userAnswer === window.gameState.correctAnswer) {
+                window.gameState.score += 1;
+                messageElement.innerHTML = `<span class="text-main-green font-bold">Correct!</span> Well done.`;
+                
+                cardAElement.classList.add('correct-answer');
+                cardBElement.classList.add('correct-answer');
+
+                setTimeout(startGame, 1500); // Start new game after 1.5 second
+            } else {
+                // Wrong answer
+                messageElement.innerHTML = `<span class="text-red-600 font-bold">Incorrect!</span> Keep trying!`;
+                
+                // Add temporary red feedback
+                cardAElement.classList.add('incorrect-answer');
+                cardBElement.classList.add('incorrect-answer');
+
+                // Vibrate and clear input for next try
+                inputElement.classList.add('vibrate');
+                inputElement.value = ''; // Clear input for easier re-entry
+
+                // Remove vibration and incorrect highlight after a short delay
+                setTimeout(() => {
+                    inputElement.classList.remove('vibrate');
+                    cardAElement.classList.remove('incorrect-answer');
+                    cardBElement.classList.remove('incorrect-answer');
+                }, 500);
+                
+                // Keep the current problem active for the player to re-guess
+            }
+            
+            renderGame();
+        };
+
+        // Simplified Initialization
+        window.onload = () => {
+            window.startGame = startGame;
+            window.checkAnswer = checkAnswer;
+            startGame();
+        };
+
+    </script>
+</head>
+<body class="bg-white text-gray-800 min-h-screen flex flex-col items-center p-4">
+
+    <!-- Header and Info -->
+    <header class="w-full max-w-4xl text-center mb-6">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Adding</h1>
+        <p class="text-gray-600">Combine the total Plates (Hundreds), Stacks (Tens), and Squares (Ones) from both cards.</p>
+        
+        <!-- Score display only -->
+        <div class="flex justify-center items-center text-base mt-4 p-3 bg-gray-100 rounded-lg shadow-inner">
+            <span id="current-score-display" class="font-semibold text-gray-800 text-lg">Score: 0</span>
+        </div>
+    </header>
+
+    <!-- Game Area -->
+    <main class="w-full max-w-4xl p-4 rounded-xl shadow-xl space-y-8 card-style">
+
+        <!-- Cards Display Area -->
+        <section class="flex flex-col sm:flex-row justify-around items-stretch gap-4">
+            
+            <!-- Card A -->
+            <div id="card-a-wrapper" class="bg-white p-4 rounded-lg shadow-md w-full sm:w-1/2 relative flex flex-col justify-between">
+                <div id="card-a-shapes" class="block-wrapper flex-1">
+                    <!-- Shapes (Hundres, Tens, Ones) will be rendered here by JS -->
+                </div>
+            </div>
+
+            <!-- Plus Sign Separator -->
+            <div class="text-5xl font-extrabold text-gray-700 self-center">+</div>
+
+            <!-- Card B -->
+            <div id="card-b-wrapper" class="bg-white p-4 rounded-lg shadow-md w-full sm:w-1/2 relative flex flex-col justify-between">
+                <div id="card-b-shapes" class="block-wrapper flex-1">
+                    <!-- Shapes (Hundres, Tens, Ones) will be rendered here by JS -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Result/Input Area -->
+        <section class="mt-8 pt-6 border-t border-gray-300 space-y-4">
+            <div id="message-box" class="text-center text-lg h-8 font-semibold">
+                Loading game...
+            </div>
+            
+            <div class="flex justify-center">
+                <!-- Input field allows up to 3 digits for numbers up to 299 -->
+                <input 
+                    type="text" 
+                    id="answer-input" 
+                    placeholder="Enter total number here" 
+                    class="p-3 w-full max-w-xs text-2xl text-center border-2 border-main-blue rounded-l-lg focus:ring-2 focus:ring-main-blue focus:border-main-blue text-gray-800 shadow-inner"
+                    onkeydown="if(event.key === 'Enter') checkAnswer()"
+                    maxlength="3" 
+                >
+                <button 
+                    onclick="checkAnswer()" 
+                    class="bg-main-blue hover:bg-dark-blue text-white font-bold py-3 px-6 rounded-r-lg text-xl transition duration-200 shadow-md hover:shadow-lg"
+                >
+                    Submit
+                </button>
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>
