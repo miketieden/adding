@@ -95,7 +95,7 @@
             display: flex;
             flex-direction: column; 
             flex-wrap: wrap; 
-            /* Max height set for 3 blocks (0.6em each) + 2 gaps (0.2em each) = 1.8em + 0.4em = 2.2em */
+            /* Max height set for 3 blocks (0.6em each) + 2 gaps (0.2em each) = 2.2em */
             max-height: 2.2em; /* Enforces 3 blocks high before wrapping */
             gap: 0.2em; /* Spacing between individual squares */
             align-content: flex-start; 
@@ -131,6 +131,11 @@
             background-color: #fecaca; 
             border: 3px solid #dc2626; 
         }
+
+        /* Modal Backdrop */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
         
     </style>
     <script type="module">
@@ -143,7 +148,7 @@
         };
 
         const generateCard = () => {
-            // Plates (Hundreds): 0, 1, or 2 (to allow total up to 299)
+            // Plates (Hundreds): 0, 1, or 2.
             const plates = Math.floor(Math.random() * 3); 
             // Stacks (Tens): 0 to 9
             const stacks = Math.floor(Math.random() * 10); 
@@ -216,9 +221,7 @@
             const totalStacks = window.gameState.cardA.stacks + window.gameState.cardB.stacks;
             const totalSquares = window.gameState.cardA.squares + window.gameState.cardB.squares;
 
-            // Reroll if the totals exceed the no-regrouping constraints
-            // Total plates must be 2 or less (max number is 299)
-            // Total stacks/squares must be 9 or less
+            // Reroll if the totals exceed the no-regrouping constraints:
             if (totalPlates > 2 || totalStacks > 9 || totalSquares > 9) {
                 return startGame();
             }
@@ -226,7 +229,7 @@
             // Calculate the correct answer
             window.gameState.correctAnswer = (totalPlates * 100) + (totalStacks * 10) + totalSquares;
             
-            // Ensure the minimum number is 11, otherwise reroll for a meaningful problem
+            // Ensure the minimum number is 11, otherwise reroll
             if (window.gameState.correctAnswer < 11) {
                 return startGame();
             }
@@ -297,10 +300,21 @@
             renderGame();
         };
 
+        // Modal Logic
+        const openRules = () => {
+            document.getElementById('rules-modal').classList.remove('hidden');
+        };
+
+        const closeRules = () => {
+            document.getElementById('rules-modal').classList.add('hidden');
+        };
+
         // Simplified Initialization
         window.onload = () => {
             window.startGame = startGame;
             window.checkAnswer = checkAnswer;
+            window.openRules = openRules;
+            window.closeRules = closeRules;
             startGame();
         };
 
@@ -309,11 +323,18 @@
 <body class="bg-white text-gray-800 min-h-screen flex flex-col items-center p-4">
 
     <!-- Header and Info -->
-    <header class="w-full max-w-4xl text-center mb-6">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Adding</h1>
-        <p class="text-gray-600">Combine the total Plates (Hundreds), Stacks (Tens), and Squares (Ones) from both cards.</p>
+    <header class="w-full max-w-4xl text-center mb-6 relative">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Adding</h1>
         
-        <!-- Score display only -->
+        <!-- How to Play Button (Updated to Blue Button) -->
+        <button 
+            onclick="openRules()" 
+            class="bg-main-blue hover:bg-dark-blue text-white font-semibold py-2 px-4 rounded-lg text-sm transition duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:ring-opacity-50"
+        >
+            How to Play
+        </button>
+        
+        <!-- Score display -->
         <div class="flex justify-center items-center text-base mt-4 p-3 bg-gray-100 rounded-lg shadow-inner">
             <span id="current-score-display" class="font-semibold text-gray-800 text-lg">Score: 0</span>
         </div>
@@ -355,7 +376,7 @@
                 <input 
                     type="text" 
                     id="answer-input" 
-                    placeholder="Enter total number here" 
+                    placeholder="" 
                     class="p-3 w-full max-w-xs text-2xl text-center border-2 border-main-blue rounded-l-lg focus:ring-2 focus:ring-main-blue focus:border-main-blue text-gray-800 shadow-inner"
                     onkeydown="if(event.key === 'Enter') checkAnswer()"
                     maxlength="3" 
@@ -370,5 +391,32 @@
         </section>
 
     </main>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4 border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">How to Play</h3>
+                <button onclick="closeRules()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-4 text-gray-700">
+                <p>Combine the blocks from both cards to find the total sum.</p>
+                <ul class="list-disc list-inside space-y-2 ml-2">
+                    <li><span class="inline-block w-3 h-3 bg-[var(--color-orange-main)] rounded-sm mr-1"></span><strong>Plates (Orange):</strong> Hundreds</li>
+                    <li><span class="inline-block w-2 h-4 bg-[var(--color-green-main)] rounded-sm mr-1"></span><strong>Stacks (Green):</strong> Tens</li>
+                    <li><span class="inline-block w-2 h-2 bg-[var(--color-blue-main)] rounded-sm mr-1"></span><strong>Squares (Blue):</strong> Ones</li>
+                </ul>
+                <p class="text-sm italic bg-gray-100 p-2 rounded">Note: No regrouping is needed. The total for each place value will never exceed 9.</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeRules()" class="bg-main-blue hover:bg-dark-blue text-white font-bold py-2 px-4 rounded transition duration-200">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
