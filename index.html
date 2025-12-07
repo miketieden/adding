@@ -29,13 +29,12 @@
             background-color: #ffffff;
         }
 
-        /* --- Block Sizing and Appearance --- */
-        /* Base unit has been scaled down to 0.6em to fit Plates (Hundreds) */
+        /* --- Block Sizing and Appearance (UPDATED TO PX) --- */
         
-        /* Plates (Hundreds) - Orange */
+        /* Plates (Hundreds) - Orange: 75px x 75px */
         .plate-block {
-            width: 6em; /* 10 * 0.6em */
-            height: 6em; /* 10 * 0.6em */
+            width: 75px; 
+            height: 75px; 
             background-color: var(--color-orange-main);
             box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--color-dark-orange-border);
@@ -43,10 +42,10 @@
             border-radius: 0.2em;
         }
 
-        /* Stacks (Tens) - Green */
+        /* Stacks (Tens) - Green: 18px x 75px */
         .ten-block {
-            width: 0.6em; 
-            height: 6em; /* 10 * 0.6em */
+            width: 18px; 
+            height: 75px; 
             background-color: var(--color-green-main); 
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
             border: 1px solid var(--color-dark-green);
@@ -54,10 +53,10 @@
             border-radius: 0.1em;
         }
 
-        /* Squares (Ones) - Blue */
+        /* Squares (Ones) - Blue: 18px x 18px */
         .one-block {
-            width: 0.6em;
-            height: 0.6em;
+            width: 18px;
+            height: 18px;
             background-color: var(--color-blue-main); 
             box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
             border: 1px solid var(--color-dark-blue-border); 
@@ -71,7 +70,7 @@
             gap: 1em; /* Increased gap between major block groups (H, T, O) */
             justify-content: center;
             align-items: flex-end; /* Align all content to the bottom of the card */
-            min-height: 6em; /* Height of the largest block (Plate) */
+            min-height: 75px; /* Height of the largest block (Plate/Stack) */
         }
         
         /* Container for the Hundreds Blocks (Plates) */
@@ -90,14 +89,14 @@
             padding-bottom: 0.5em; 
         }
 
-        /* Container for the Ones Blocks (Squares) - FORCED COLUMN WRAP (3x3 Grid) */
+        /* Container for the Ones Blocks (Squares) - FORCED COLUMN WRAP */
         .squares-container {
             display: flex;
             flex-direction: column; 
             flex-wrap: wrap; 
-            /* Max height set for 3 blocks (0.6em each) + 2 gaps (0.2em each) = 2.2em */
-            max-height: 2.2em; /* Enforces 3 blocks high before wrapping */
-            gap: 0.2em; /* Spacing between individual squares */
+            /* Adjusted max-height to approximately 3 squares (18*3 + 4px gaps) */
+            max-height: 62px; 
+            gap: 4px; /* Adjusted gap to pixels for consistency */
             align-content: flex-start; 
             margin-left: 1em; 
             padding-bottom: 0.5em; 
@@ -404,9 +403,9 @@
             <div class="space-y-4 text-gray-700">
                 <p>Combine the blocks from both cards to find the total sum.</p>
                 <ul class="list-disc list-inside space-y-2 ml-2">
-                    <li><span class="inline-block w-3 h-3 bg-[var(--color-orange-main)] rounded-sm mr-1"></span><strong>Plates (Orange):</strong> Hundreds</li>
-                    <li><span class="inline-block w-2 h-4 bg-[var(--color-green-main)] rounded-sm mr-1"></span><strong>Stacks (Green):</strong> Tens</li>
-                    <li><span class="inline-block w-2 h-2 bg-[var(--color-blue-main)] rounded-sm mr-1"></span><strong>Squares (Blue):</strong> Ones</li>
+                    <li><span class="inline-block w-[75px] h-[75px] bg-[var(--color-orange-main)] rounded-sm mr-1"></span><strong>Plates (Orange):</strong> Hundreds</li>
+                    <li><span class="inline-block w-[18px] h-[75px] bg-[var(--color-green-main)] rounded-sm mr-1"></span><strong>Stacks (Green):</strong> Tens</li>
+                    <li><span class="inline-block w-[18px] h-[18px] bg-[var(--color-blue-main)] rounded-sm mr-1"></span><strong>Squares (Blue):</strong> Ones</li>
                 </ul>
                 <p class="text-sm italic bg-gray-100 p-2 rounded">Note: No regrouping is needed. The total for each place value will never exceed 9.</p>
             </div>
